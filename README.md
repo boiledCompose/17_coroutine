@@ -6,4 +6,4 @@
 
 [2. 비동기 코드](https://github.com/boiledCompose/coroutine/blob/main/asynchronous.md)
 
-[3. 예외 및 취소](https://github.com/boiledCompose/coroutine/blob/main/exceptions.md)
+[3. 코루틴 개념](https://github.com/boiledCompose/coroutine/blob/main/coroutine.md)
