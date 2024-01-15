@@ -35,12 +35,78 @@ suspend fun printTemperature() {
 코루틴 라이브러리의 `launch()`를 사용하여 새로운 코루틴을 실행할 수 있다. 
 `launch()`를 사용하게 되면 `runBlock()`과 달리 모든 작업이 끝나기 전에 블록을 반환하여 실행 속도가 더 빨라진다.
 
-`runBlock()`의 경우 모든 작업이 끝나야만 블록이 반환되어 `runBlock()`간 순차적 실행이 이뤄졌지만, `launch()`의 경우 코루틴들이 동시에 실행될 수 있다.
+`runBlock()`의 경우 모든 작업이 끝나야만 블록이 반환되기 때문에 `runBlock()` 코드들간에 순차적인 실행이 이뤄졌지만, `launch()`의 경우 코루틴들이 동시에 실행될 수 있다.
 
 <br>
 
 ### async() 
 
-**`async()`함수**는 코루틴의 반환 값이 필요한 경우 사용하는 코루틴 라이브러리 함수이다.
+**`async()`함수**는 코루틴의 반환 값이 필요한 경우 사용하는 코루틴 라이브러리 함수이다. `async()` 함수는 `Deferred` 유형의 객체를 반환한다. 'await()`를 사용해 `Deferred` 객체의 결과에 접근할 수 있다.
+
+```
+import kotlinx.coroutines.*
+
+fun main() {
+    runBlocking {
+        println("Weather forecast")
+        /*async()는 Deferred 객체를 반환*/
+        val forecast: Deferred<String> = async {
+            getForecast()
+        }
+        val temperature: Deferred<String> = async {
+            getTemperature()
+        }
+
+        /*Deferred 객체의 반환값엔 await()로 접근*/
+        println("${forecast.await()} ${temperature.await()}")
+        println("Have a good day!")
+    }
+}
+
+suspend fun getForecast(): String {
+    delay(1000)
+    return "Sunny"
+}
+
+suspend fun getTemperature(): String {
+    delay(1000)
+    return "30\u00b0C"
+}
+```
+
+### 병렬 분해
+
+병렬 분해는 문제를 병렬로 해결할 수 있는 더 작은 하위 작업으로 세분화하는 것이다. 하위 작업의 결과가 준비되면 최종 결과로 결합할 수 있다.
+
+**`coroutineScope()` 함수**는 모든 작업이 완료된 후에만 반환되는 함수로, 함수가 내부적으로 동시에 작업을 하고 있더라도 모든 작업이 완료되기 전까지 반환되지 않아 호출자의 입장에서는 함수가 동기 작업처럼 보이도록 한다.
+
+```
+fun main() {
+    runBlocking {
+        println("Weather forecast")
+        println(getWeatherReport())
+        println("Have a good day!")
+    }
+}
+
+suspend fun getWeatherReport() = coroutineScope {
+    val forecase = async { getForecast() }
+    val temperature = async { getTemperature() }
+    "${forecast.await()} ${temperature.await()}"
+}
+
+suspend fun getForecast(): String {
+    delay(1000)
+    return "Sunny"
+}
+
+suspend fun getTemperature(): String {
+    delay(1000)
+    return "30\u00b0C"
+}
+```
+
+여기서 주목할만한 사항은 getWeatherReport 내부에선 비동기적으로 함수들을 호출하여 순서가 명확히 정해지지 않았지만, main의 내부에선 `runBlocking()`을 사용함으로써 출력문이 순서대로 진행된다.
+
 
 
